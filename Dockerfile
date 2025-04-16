@@ -14,5 +14,5 @@ RUN npm install
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start using npm start (uses the script defined in package.json)
-CMD ["npm", "start"] 
+# Start the app
+CMD ["node", "simple-server.js"] 

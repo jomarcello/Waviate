@@ -1,13 +1,7 @@
 [build]
-builder = "NIXPACKS"
+builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "npm start"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
-restartPolicyType = "on_failure"
-numReplicas = 1
-
-[service]
-internal_port = 3000
-port = 3000 
+restartPolicyType = "on_failure" 

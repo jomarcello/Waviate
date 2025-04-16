@@ -19,18 +19,14 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const app = express();
-// Forceer specifiek poort 3000, ongeacht wat de omgevingsvariabele zegt
-// Dit is nodig omdat Railway de PORT omgevingsvariabele op 8080 instelt, maar in de Metal Edge 
-// configuratie verwacht dat de app op poort 3000 luistert
+// Hardcoded op 3000 om zeker te zijn dat we op dezelfde poort luisteren als in de Dockerfile EXPOSE
+// Ongeacht wat de Railway omgevingsvariabelen doen
 const PORT = 3000;
-const HOST = '0.0.0.0';
 
 console.log('Configured server port:', PORT);
-console.log('Configured server host:', HOST);
 
 // Voor het verwerken van JSON body in POST requests
 app.use(express.json());
-console.log('Configured middleware: express.json()');
 
 // Logger middleware voor alle requests
 app.use((req, res, next) => {
@@ -40,13 +36,15 @@ app.use((req, res, next) => {
 
 // Het WhatsApp Webhook verificatie token uit omgevingsvariabele of fallback naar de hardcoded waarde
 const VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'waviate_webhook_verify_2024';
-console.log('Using verify token:', VERIFY_TOKEN.substring(0, 3) + '***' + VERIFY_TOKEN.substring(VERIFY_TOKEN.length - 3));
+console.log('Using webhook verify token:', VERIFY_TOKEN.substring(0, 3) + '***' + VERIFY_TOKEN.substring(VERIFY_TOKEN.length - 3));
 
+// Root endpoint
 app.get('/', (req, res) => {
   console.log('Received request to root path');
   res.send('Waviate API is running');
 });
 
+// Health check endpoint - KRITISCH voor Railway
 app.get('/health', (req, res) => {
   console.log('Received health check request');
   res.json({ status: 'ok' });
@@ -87,13 +85,9 @@ const handleWebhookMessages = (req, res) => {
   res.status(200).send('EVENT_RECEIVED');
 };
 
-// WhatsApp Webhook op nested route - GET voor verificatie
+// WhatsApp Webhook routes
 app.get('/api/whatsapp/webhook', handleWebhookVerification);
-
-// WhatsApp Webhook op nested route - POST voor berichten en updates
 app.post('/api/whatsapp/webhook', handleWebhookMessages);
-
-// Alternatieve route op root niveau
 app.get('/webhook', handleWebhookVerification);
 app.post('/webhook', handleWebhookMessages);
 
@@ -103,23 +97,11 @@ app.use((err, req, res, next) => {
   res.status(500).send('Internal Server Error');
 });
 
+// Start de server
 try {
-  // Railway vereist soms dat je gewoon op PORT luistert zonder HOST specificatie
-  console.log('Attempting to listen on port', PORT);
-  
-  const server = app.listen(PORT, () => {
-    console.log(`=== Server successfully started ===`);
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Using webhook verify token: ${VERIFY_TOKEN.substring(0, 3)}***`);
+  app.listen(PORT, () => {
+    console.log(`=== Server successfully started on port ${PORT} ===`);
     console.log(`=== Ready to receive requests ===`);
-  });
-  
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received: closing HTTP server');
-    server.close(() => {
-      console.log('HTTP server closed');
-    });
   });
 } catch (error) {
   console.error('Failed to start server:', error);
