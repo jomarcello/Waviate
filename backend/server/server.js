@@ -55,6 +55,76 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Supabase test endpoint
+app.get('/api/supabase-test', async (req, res) => {
+  try {
+    // Get Supabase client
+    const supabase = supabaseService.getClient();
+    
+    // Test connection to each table
+    const results = {};
+    
+    // Test leads table
+    try {
+      const { data: leads, error: leadsError } = await supabase
+        .from('leads')
+        .select('count')
+        .limit(1);
+      
+      results.leads = {
+        success: !leadsError,
+        error: leadsError ? leadsError.message : null,
+        data: leads
+      };
+    } catch (e) {
+      results.leads = { success: false, error: e.message };
+    }
+    
+    // Test conversations table
+    try {
+      const { data: conversations, error: convsError } = await supabase
+        .from('conversations')
+        .select('count')
+        .limit(1);
+      
+      results.conversations = {
+        success: !convsError,
+        error: convsError ? convsError.message : null,
+        data: conversations
+      };
+    } catch (e) {
+      results.conversations = { success: false, error: e.message };
+    }
+    
+    // Test messages table
+    try {
+      const { data: messages, error: msgsError } = await supabase
+        .from('messages')
+        .select('count')
+        .limit(1);
+      
+      results.messages = {
+        success: !msgsError,
+        error: msgsError ? msgsError.message : null,
+        data: messages
+      };
+    } catch (e) {
+      results.messages = { success: false, error: e.message };
+    }
+    
+    // Return results
+    res.status(200).json({
+      timestamp: new Date().toISOString(),
+      supabase_url: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 15) + '...' : 'not set',
+      supabase_key: process.env.SUPABASE_KEY ? 'set (hidden)' : 'not set',
+      test_results: results
+    });
+  } catch (error) {
+    console.error('Error in supabase-test:', error);
+    res.status(500).json({ error: 'Failed to test Supabase connection', details: error.message });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ 
