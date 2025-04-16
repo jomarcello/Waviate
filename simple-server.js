@@ -6,8 +6,8 @@ const PORT = process.env.PORT || 3000;
 // Voor het verwerken van JSON body in POST requests
 app.use(express.json());
 
-// Het WhatsApp Webhook verificatie token
-const VERIFY_TOKEN = 'waviate_webhook_verify_2024';
+// Het WhatsApp Webhook verificatie token uit omgevingsvariabele of fallback naar de hardcoded waarde
+const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'waviate_webhook_verify_2024';
 
 app.get('/', (req, res) => {
   res.send('Waviate API is running');
@@ -27,6 +27,7 @@ app.get('/api/whatsapp/webhook', (req, res) => {
   const challenge = req.query['hub.challenge'];
 
   console.log(`Mode: ${mode}, Token: ${token}, Challenge: ${challenge}`);
+  console.log(`Expected token: ${VERIFY_TOKEN}`);
 
   // Check of de mode en token kloppen
   if (mode === 'subscribe' && token === VERIFY_TOKEN) {
@@ -51,4 +52,5 @@ app.post('/api/whatsapp/webhook', (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Using webhook verify token: ${VERIFY_TOKEN}`);
 }); 
