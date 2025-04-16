@@ -44,15 +44,29 @@ console.log('Using webhook verify token:', VERIFY_TOKEN.substring(0, 3) + '***' 
 
 // Root endpoint
 app.get('/', (req, res) => {
-  console.log('Received request to root path');
-  res.send(`Waviate API is running on port ${PORT}`);
+  console.log('ROOT PATH request received at ' + new Date().toISOString());
+  console.log('Root request headers:', JSON.stringify(req.headers, null, 2));
+  
+  // Stuur een eenvoudige response die voor Railway's healthcheck werkt
+  res.status(200).json({
+    status: 'ok',
+    message: 'Waviate API is running on port ' + PORT,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Health check endpoint - KRITISCH voor Railway
 app.get('/health', (req, res) => {
-  console.log('Received health check request with headers:', req.headers);
-  res.set('Content-Type', 'application/json');
-  res.status(200).json({ status: 'ok', port: PORT, timestamp: new Date().toISOString() });
+  console.log('HEALTH CHECK received at ' + new Date().toISOString());
+  console.log('Health check request with headers:', JSON.stringify(req.headers, null, 2));
+  
+  // Stuur een eenvoudige 200 OK response
+  res.status(200).json({ 
+    status: 'ok', 
+    port: PORT, 
+    timestamp: new Date().toISOString(),
+    message: 'Health check endpoint is working'
+  });
 });
 
 // Functie om webhook verificatie af te handelen
@@ -124,6 +138,21 @@ try {
   // Voeg server error handlers toe
   server.on('error', (error) => {
     console.error('Server error:', error);
+  });
+  
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+      console.log('HTTP server closed');
+    });
+  });
+  
+  process.on('SIGINT', () => {
+    console.log('SIGINT signal received: closing HTTP server');
+    server.close(() => {
+      console.log('HTTP server closed');
+    });
   });
 } catch (error) {
   console.error('Failed to start server:', error);
