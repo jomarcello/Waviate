@@ -19,5 +19,5 @@ RUN ls -la
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start with the shell script
-CMD ["/app/start.sh"] 
+# Start the server directly
+CMD ["node", "simple-server.js"] 
