@@ -3,10 +3,19 @@ const express = require('express');
 
 console.log('=== Starting Waviate API server ===');
 console.log('Node version:', process.version);
+console.log('All environment variables:', Object.keys(process.env));
 console.log('Environment variables:', {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
   WHATSAPP_WEBHOOK_VERIFY_TOKEN: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ? 'Set (value hidden)' : 'Not set'
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION:', reason);
 });
 
 const app = express();
@@ -17,6 +26,12 @@ console.log('Configured server port:', PORT);
 // Voor het verwerken van JSON body in POST requests
 app.use(express.json());
 console.log('Configured middleware: express.json()');
+
+// Logger middleware voor alle requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
 
 // Het WhatsApp Webhook verificatie token uit omgevingsvariabele of fallback naar de hardcoded waarde
 const VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'waviate_webhook_verify_2024';
@@ -35,6 +50,7 @@ app.get('/health', (req, res) => {
 // WhatsApp Webhook - GET voor verificatie
 app.get('/api/whatsapp/webhook', (req, res) => {
   console.log('Webhook GET request received');
+  console.log('Query parameters:', req.query);
   
   // WhatsApp stuurt deze parameters voor webhook verificatie
   const mode = req.query['hub.mode'];
@@ -59,18 +75,33 @@ app.get('/api/whatsapp/webhook', (req, res) => {
 // WhatsApp Webhook - POST voor berichten en updates
 app.post('/api/whatsapp/webhook', (req, res) => {
   console.log('Webhook POST request received');
-  console.log(JSON.stringify(req.body, null, 2));
+  console.log('Headers:', req.headers);
+  console.log('Body:', JSON.stringify(req.body, null, 2));
   
   // Bevestig ontvangst aan WhatsApp
   res.status(200).send('EVENT_RECEIVED');
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error in request:', err);
+  res.status(500).send('Internal Server Error');
+});
+
 try {
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`=== Server successfully started ===`);
     console.log(`Server running on port ${PORT}`);
     console.log(`Using webhook verify token: ${VERIFY_TOKEN.substring(0, 3)}***`);
     console.log(`=== Ready to receive requests ===`);
+  });
+  
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+      console.log('HTTP server closed');
+    });
   });
 } catch (error) {
   console.error('Failed to start server:', error);
