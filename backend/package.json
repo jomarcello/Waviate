@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node server/server.js",
+    "build": "echo 'No build step required'",
     "dev": "nodemon server/server.js",
     "test": "jest"
   },

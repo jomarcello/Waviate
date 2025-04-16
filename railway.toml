@@ -1,6 +1,7 @@
 [build]
 builder = "nixpacks"
 buildCommand = "cd backend && npm install"
+providers = ["node"]
 
 [deploy]
 startCommand = "cd backend && node server/server.js"
@@ -9,4 +10,7 @@ healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 
 [service]
-rootDirectory = "backend" 
+rootDirectory = "backend"
+
+[nixpacks]
+nodejs = "18" 
