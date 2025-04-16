@@ -52,4 +52,4 @@ app.listen(PORT, "0.0.0.0", () => { \
 });' > /app/simple-server.js
 
 # Start the server
-CMD ["node", "simple-server.js"] 
+CMD node simple-server.js 
