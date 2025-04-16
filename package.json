@@ -7,7 +7,8 @@
     "node": "18.x"
   },
   "scripts": {
-    "start": "node simple-server.js"
+    "start": "node simple-server.js",
+    "railway": "PORT=3000 node simple-server.js"
   },
   "keywords": [
     "whatsapp",

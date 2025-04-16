@@ -3,6 +3,13 @@ const express = require('express');
 
 console.log('=== Starting Waviate API server ===');
 console.log('Node version:', process.version);
+console.log('Original PORT env var:', process.env.PORT);
+
+// Railway specifieke aanpassingen: Als PORT omgevingsvariabele wordt aangepast
+// door package.json script, dan werkt het. Anders forceren we poort 3000.
+const PORT = 3000;
+process.env.PORT = PORT.toString();
+
 console.log('All environment variables:', Object.keys(process.env));
 console.log('Environment variables:', {
   PORT: process.env.PORT,
@@ -19,10 +26,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const app = express();
-// Hardcoded op 3000 om zeker te zijn dat we op dezelfde poort luisteren als in de Dockerfile EXPOSE
-// Ongeacht wat de Railway omgevingsvariabelen doen
-const PORT = 3000;
-
 console.log('Configured server port:', PORT);
 
 // Voor het verwerken van JSON body in POST requests
@@ -41,13 +44,13 @@ console.log('Using webhook verify token:', VERIFY_TOKEN.substring(0, 3) + '***' 
 // Root endpoint
 app.get('/', (req, res) => {
   console.log('Received request to root path');
-  res.send('Waviate API is running');
+  res.send(`Waviate API is running on port ${PORT}`);
 });
 
 // Health check endpoint - KRITISCH voor Railway
 app.get('/health', (req, res) => {
   console.log('Received health check request');
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', port: PORT });
 });
 
 // Functie om webhook verificatie af te handelen
@@ -99,7 +102,8 @@ app.use((err, req, res, next) => {
 
 // Start de server
 try {
-  app.listen(PORT, () => {
+  console.log('Starting server on port:', PORT);
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`=== Server successfully started on port ${PORT} ===`);
     console.log(`=== Ready to receive requests ===`);
   });
