@@ -1,11 +1,10 @@
 {
   "name": "waviate",
   "version": "1.0.0",
-  "description": "Waviate WhatsApp API",
+  "description": "Waviate API",
   "main": "simple-server.js",
   "scripts": {
-    "start": "node simple-server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node simple-server.js"
   },
   "keywords": [
     "whatsapp",
@@ -14,7 +13,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "body-parser": "^1.20.2"
+    "express": "^4.18.2"
   }
 } 

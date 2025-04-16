@@ -4,18 +4,20 @@ FROM node:18-slim
 # Set working directory 
 WORKDIR /app
 
-# Copy files
-COPY package.json package*.json ./
+# Copy essential files
+COPY package.json ./
 COPY simple-server.js ./
+COPY start.sh ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies and make script executable
+RUN npm install && \
+    chmod +x /app/start.sh
 
-# Display directory contents for debugging
+# Show what's in the directory for debugging
 RUN ls -la
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Use exact CMD format that matches Railway interface setting
-CMD ["node", "simple-server.js"] 
+# Start with the shell script
+CMD ["/app/start.sh"] 
