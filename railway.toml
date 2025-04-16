@@ -6,6 +6,9 @@ dockerfilePath = "Dockerfile"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
+startCommand = "npm start"
+numReplicas = 1
 
 [service]
-rootDirectory = "." 
+rootDirectory = "."
+internalPort = 8080 
