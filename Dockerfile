@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Copy essential files
 COPY package.json ./
-COPY package-lock.json ./
 COPY simple-server.js ./
 
 # Install dependencies
