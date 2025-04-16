@@ -51,10 +51,21 @@ console.log('Using webhook verify token:', VERIFY_TOKEN.substring(0, 3) + '***' 
 
 // Root endpoint
 app.get('/', (req, res) => {
-  console.log('ROOT PATH request received at ' + new Date().toISOString());
-  console.log('Root request headers:', JSON.stringify(req.headers, null, 2));
+  // Detecteer Railway healthcheck
+  const userAgent = req.headers['user-agent'] || '';
+  const isRailwayHealthcheck = 
+    req.hostname === 'healthcheck.railway.app' || 
+    userAgent.includes('Railway') || 
+    userAgent.includes('railway');
+    
+  if (isRailwayHealthcheck) {
+    console.log(`${new Date().toISOString()} - RAILWAY HEALTHCHECK DETECTED`);
+    return res.status(200).send('OK');
+  }
   
-  // Stuur een eenvoudige response die voor Railway's healthcheck werkt
+  console.log('ROOT PATH request received at ' + new Date().toISOString());
+  
+  // Normale response voor niet-healthcheck requests
   res.status(200).json({
     status: 'ok',
     message: 'Waviate API is running on port ' + PORT,
@@ -69,6 +80,27 @@ app.get('/health', (req, res) => {
   
   // Eenvoudige 200 OK zonder complexe JSON
   res.status(200).send('OK');
+});
+
+// Railway debug endpoint
+app.get('/railway-debug', (req, res) => {
+  console.log('RAILWAY DEBUG endpoint hit');
+  
+  // Verzamel informatie over de omgeving
+  const debugInfo = {
+    nodeVersion: process.version,
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT,
+    hostname: req.hostname,
+    headers: req.headers,
+    railwaySpecific: {
+      railwayPublicDomain: process.env.RAILWAY_PUBLIC_DOMAIN,
+      railwayEnvironment: process.env.RAILWAY_ENVIRONMENT,
+      railwayServiceId: process.env.RAILWAY_SERVICE_ID
+    }
+  };
+  
+  res.status(200).json(debugInfo);
 });
 
 // Functie om webhook verificatie af te handelen

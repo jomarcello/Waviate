@@ -1,4 +1,4 @@
 [deploy]
 startCommand = "npm run railway"
-healthcheckPath = "/health"
+healthcheckPath = "/"
 healthcheckTimeout = 60 
