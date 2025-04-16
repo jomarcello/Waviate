@@ -7,6 +7,9 @@ const whatsappRoutes = require('../routes/whatsapp');
 
 const app = express();
 
+// Trust Railway's proxy
+app.set('trust proxy', true);
+
 // Middleware
 app.use(morgan('dev')); // Request logging
 app.use(cors());
@@ -19,6 +22,8 @@ app.use((req, res, next) => {
   res.on('finish', () => {
     const duration = Date.now() - start;
     console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms`);
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
   });
   next();
 });
@@ -28,7 +33,11 @@ app.use('/api/whatsapp', whatsappRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Waviate API is running' });
+  res.status(200).json({ 
+    message: 'Waviate API is running',
+    timestamp: new Date().toISOString(),
+    headers: req.headers
+  });
 });
 
 // Health check endpoint
@@ -39,13 +48,18 @@ app.get('/health', (req, res) => {
     env: {
       NODE_ENV: process.env.NODE_ENV,
       PORT: process.env.PORT
-    }
+    },
+    headers: req.headers
   });
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' });
+  res.status(404).json({ 
+    error: 'Not Found',
+    path: req.path,
+    method: req.method
+  });
 });
 
 // Error handling middleware
@@ -60,9 +74,27 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, '0.0.0.0', () => {
+// Listen on all network interfaces
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Base URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
   console.log(`WhatsApp webhook URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/whatsapp/webhook`);
+  
+  // Log all environment variables for debugging
+  console.log('\nEnvironment variables:');
+  Object.keys(process.env).forEach(key => {
+    if (!key.includes('TOKEN') && !key.includes('SECRET')) {
+      console.log(`${key}: ${process.env[key]}`);
+    }
+  });
+});
+
+// Handle server shutdown gracefully
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 }); 
