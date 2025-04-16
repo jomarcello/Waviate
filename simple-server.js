@@ -20,8 +20,10 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
 
 console.log('Configured server port:', PORT);
+console.log('Configured server host:', HOST);
 
 // Voor het verwerken van JSON body in POST requests
 app.use(express.json());
@@ -47,8 +49,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// WhatsApp Webhook - GET voor verificatie
-app.get('/api/whatsapp/webhook', (req, res) => {
+// Functie om webhook verificatie af te handelen
+const handleWebhookVerification = (req, res) => {
   console.log('Webhook GET request received');
   console.log('Query parameters:', req.query);
   
@@ -70,17 +72,27 @@ app.get('/api/whatsapp/webhook', (req, res) => {
     console.error('Verification failed. Token mismatch.');
     res.sendStatus(403);
   }
-});
+};
 
-// WhatsApp Webhook - POST voor berichten en updates
-app.post('/api/whatsapp/webhook', (req, res) => {
+// Functie om webhook berichten af te handelen
+const handleWebhookMessages = (req, res) => {
   console.log('Webhook POST request received');
   console.log('Headers:', req.headers);
   console.log('Body:', JSON.stringify(req.body, null, 2));
   
   // Bevestig ontvangst aan WhatsApp
   res.status(200).send('EVENT_RECEIVED');
-});
+};
+
+// WhatsApp Webhook op nested route - GET voor verificatie
+app.get('/api/whatsapp/webhook', handleWebhookVerification);
+
+// WhatsApp Webhook op nested route - POST voor berichten en updates
+app.post('/api/whatsapp/webhook', handleWebhookMessages);
+
+// Alternatieve route op root niveau
+app.get('/webhook', handleWebhookVerification);
+app.post('/webhook', handleWebhookMessages);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -89,7 +101,10 @@ app.use((err, req, res, next) => {
 });
 
 try {
-  const server = app.listen(PORT, '0.0.0.0', () => {
+  // Railway vereist soms dat je gewoon op PORT luistert zonder HOST specificatie
+  console.log('Attempting to listen on port', PORT);
+  
+  const server = app.listen(PORT, () => {
     console.log(`=== Server successfully started ===`);
     console.log(`Server running on port ${PORT}`);
     console.log(`Using webhook verify token: ${VERIFY_TOKEN.substring(0, 3)}***`);
