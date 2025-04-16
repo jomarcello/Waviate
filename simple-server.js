@@ -6,7 +6,7 @@ console.log('Node version:', process.version);
 console.log('Environment variables:', {
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
-  WHATSAPP_VERIFY_TOKEN: process.env.WHATSAPP_VERIFY_TOKEN ? 'Set (value hidden)' : 'Not set'
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ? 'Set (value hidden)' : 'Not set'
 });
 
 const app = express();
@@ -19,7 +19,7 @@ app.use(express.json());
 console.log('Configured middleware: express.json()');
 
 // Het WhatsApp Webhook verificatie token uit omgevingsvariabele of fallback naar de hardcoded waarde
-const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'waviate_webhook_verify_2024';
+const VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'waviate_webhook_verify_2024';
 console.log('Using verify token:', VERIFY_TOKEN.substring(0, 3) + '***' + VERIFY_TOKEN.substring(VERIFY_TOKEN.length - 3));
 
 app.get('/', (req, res) => {
