@@ -10,7 +10,8 @@
     "start": "node server/server.js",
     "build": "echo 'No build step required'",
     "dev": "nodemon server/server.js",
-    "test": "jest"
+    "test": "jest",
+    "debug": "ls -la && find . -type f | sort && node -e \"console.log('Environment:', process.env)\" && node server/server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
