@@ -16,5 +16,10 @@ COPY backend/ ./
 # Expose the port the app runs on
 EXPOSE 3000
 
+# Add debugging information
+RUN ls -la
+RUN echo "Current directory structure:"
+RUN find . -type f | sort
+
 # Start the application
-CMD ["npm", "start"] 
+CMD ["node", "server/server.js"] 
