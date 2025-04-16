@@ -34,6 +34,7 @@ app.use(express.json());
 // Logger middleware voor alle requests
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Request headers:', req.headers);
   next();
 });
 
@@ -49,8 +50,9 @@ app.get('/', (req, res) => {
 
 // Health check endpoint - KRITISCH voor Railway
 app.get('/health', (req, res) => {
-  console.log('Received health check request');
-  res.json({ status: 'ok', port: PORT });
+  console.log('Received health check request with headers:', req.headers);
+  res.set('Content-Type', 'application/json');
+  res.status(200).json({ status: 'ok', port: PORT });
 });
 
 // Functie om webhook verificatie af te handelen
@@ -94,6 +96,12 @@ app.post('/api/whatsapp/webhook', handleWebhookMessages);
 app.get('/webhook', handleWebhookVerification);
 app.post('/webhook', handleWebhookMessages);
 
+// ALLE routes endpoint om alles op te vangen
+app.use('*', (req, res) => {
+  console.log(`Catch-all route hit for: ${req.originalUrl}`);
+  res.json({ status: 'Route not found, but server is running', path: req.originalUrl });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error in request:', err);
@@ -103,9 +111,19 @@ app.use((err, req, res, next) => {
 // Start de server
 try {
   console.log('Starting server on port:', PORT);
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`=== Server successfully started on port ${PORT} ===`);
+  
+  // Expliciet luisteren op ALLE netwerk interfaces
+  const HOST = '0.0.0.0';
+  console.log(`Binding to host: ${HOST}`);
+  
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`=== Server successfully started on ${HOST}:${PORT} ===`);
     console.log(`=== Ready to receive requests ===`);
+  });
+  
+  // Voeg server error handlers toe
+  server.on('error', (error) => {
+    console.error('Server error:', error);
   });
 } catch (error) {
   console.error('Failed to start server:', error);
