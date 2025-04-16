@@ -7,7 +7,7 @@ console.log('Original PORT env var:', process.env.PORT);
 
 // Railway specifieke aanpassingen: Als PORT omgevingsvariabele wordt aangepast
 // door package.json script, dan werkt het. Anders forceren we poort 3000.
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 process.env.PORT = PORT.toString();
 
 console.log('All environment variables:', Object.keys(process.env));
@@ -33,8 +33,15 @@ app.use(express.json());
 
 // Logger middleware voor alle requests
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  console.log('Request headers:', req.headers);
+  // Check specifiek voor Railway healthcheck requests
+  const isRailwayHealthcheck = req.hostname === 'healthcheck.railway.app';
+  
+  if (isRailwayHealthcheck) {
+    console.log(`${new Date().toISOString()} - RAILWAY HEALTHCHECK - ${req.method} ${req.url}`);
+  } else {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log('Request headers:', req.headers);
+  }
   next();
 });
 
@@ -57,16 +64,11 @@ app.get('/', (req, res) => {
 
 // Health check endpoint - KRITISCH voor Railway
 app.get('/health', (req, res) => {
-  console.log('HEALTH CHECK received at ' + new Date().toISOString());
-  console.log('Health check request with headers:', JSON.stringify(req.headers, null, 2));
+  // Minimale logging 
+  console.log(`HEALTH CHECK received from ${req.hostname || 'unknown'} at ${new Date().toISOString()}`);
   
-  // Stuur een eenvoudige 200 OK response
-  res.status(200).json({ 
-    status: 'ok', 
-    port: PORT, 
-    timestamp: new Date().toISOString(),
-    message: 'Health check endpoint is working'
-  });
+  // Eenvoudige 200 OK zonder complexe JSON
+  res.status(200).send('OK');
 });
 
 // Functie om webhook verificatie af te handelen
