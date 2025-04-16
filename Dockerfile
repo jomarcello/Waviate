@@ -1,25 +1,26 @@
 # Use Node.js 18 as the base image
 FROM node:18-slim
 
-# Set working directory
+# Set working directory 
 WORKDIR /app
 
-# Copy only the package files first for better caching
-COPY backend/package*.json ./
+# Copy the standalone server and package.json
+COPY standalone-server.js /app/
+COPY backend/package.json /app/
 
-# Install dependencies
-RUN npm install
+# Install only production dependencies
+RUN npm install --only=production express cors dotenv
 
-# Copy the rest of the application
-COPY backend/ ./
+# Add debugging information
+RUN echo "===== DIRECTORY STRUCTURE ====="
+RUN ls -la
+RUN echo "===== NODE VERSION ====="
+RUN node --version
+RUN echo "===== NPM VERSION ====="
+RUN npm --version
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Add debugging information
-RUN ls -la
-RUN echo "Current directory structure:"
-RUN find . -type f | sort
-
-# Start the application
-CMD ["node", "server/server.js"] 
+# Start the standalone server
+CMD ["node", "standalone-server.js"] 
