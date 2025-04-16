@@ -8,4 +8,4 @@ healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 
 [service]
-rootDirectory = "backend" 
+rootDirectory = "." 
