@@ -15,4 +15,4 @@ RUN npm install
 EXPOSE 3000
 
 # Start the app
-CMD ["node", "simple-server.js"] 
+CMD ["npm", "run", "railway"] 

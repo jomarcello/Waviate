@@ -52,7 +52,7 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   console.log('Received health check request with headers:', req.headers);
   res.set('Content-Type', 'application/json');
-  res.status(200).json({ status: 'ok', port: PORT });
+  res.status(200).json({ status: 'ok', port: PORT, timestamp: new Date().toISOString() });
 });
 
 // Functie om webhook verificatie af te handelen
