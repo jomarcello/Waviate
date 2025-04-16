@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Copy essential files
 COPY package.json ./
+COPY package-lock.json ./
 COPY simple-server.js ./
 
 # Install dependencies
@@ -14,4 +15,5 @@ RUN npm install
 # Expose the port the app runs on
 EXPOSE 3000
 
-# We intentionally don't include CMD here to let Railway handle it 
+# Start using npm start (uses the script defined in package.json)
+CMD ["npm", "start"] 
