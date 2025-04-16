@@ -32,9 +32,8 @@
 # Misc
 **/.DS_Store
 **/README.md
-Dockerfile
 .dockerignore
 
-# Ignore everything except backend
-/*
-!/backend 
+# Keep important files
+!simple-server.js
+!package.json 
