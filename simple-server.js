@@ -19,9 +19,10 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const app = express();
-// Gebruik de PORT omgevingsvariabele als deze bestaat, anders fallback naar 3000
-// Dit maakt de app flexibeler met verschillende Railway configuraties
-const PORT = process.env.PORT || 3000;
+// Forceer specifiek poort 3000, ongeacht wat de omgevingsvariabele zegt
+// Dit is nodig omdat Railway de PORT omgevingsvariabele op 8080 instelt, maar in de Metal Edge 
+// configuratie verwacht dat de app op poort 3000 luistert
+const PORT = 3000;
 const HOST = '0.0.0.0';
 
 console.log('Configured server port:', PORT);
