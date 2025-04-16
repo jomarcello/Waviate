@@ -49,28 +49,11 @@ app.use((req, res, next) => {
 const VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || 'waviate_webhook_verify_2024';
 console.log('Using webhook verify token:', VERIFY_TOKEN.substring(0, 3) + '***' + VERIFY_TOKEN.substring(VERIFY_TOKEN.length - 3));
 
-// Root endpoint
+// Root endpoint - ULTRA SIMPEL voor Railway healthchecks
 app.get('/', (req, res) => {
-  // Detecteer Railway healthcheck
-  const userAgent = req.headers['user-agent'] || '';
-  const isRailwayHealthcheck = 
-    req.hostname === 'healthcheck.railway.app' || 
-    userAgent.includes('Railway') || 
-    userAgent.includes('railway');
-    
-  if (isRailwayHealthcheck) {
-    console.log(`${new Date().toISOString()} - RAILWAY HEALTHCHECK DETECTED`);
-    return res.status(200).send('OK');
-  }
-  
-  console.log('ROOT PATH request received at ' + new Date().toISOString());
-  
-  // Normale response voor niet-healthcheck requests
-  res.status(200).json({
-    status: 'ok',
-    message: 'Waviate API is running on port ' + PORT,
-    timestamp: new Date().toISOString()
-  });
+  console.log(`${new Date().toISOString()} - Root endpoint hit`);
+  // Stuur altijd een eenvoudige OK terug voor maximale compatibiliteit
+  res.status(200).send('OK');
 });
 
 // Health check endpoint - KRITISCH voor Railway

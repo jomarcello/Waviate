@@ -1,4 +1,4 @@
 [deploy]
-startCommand = "npm run railway"
+startCommand = "PORT=3000 node simple-server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 60 

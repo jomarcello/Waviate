@@ -11,6 +11,9 @@ COPY simple-server.js ./
 # Install dependencies
 RUN npm install
 
+# Set environment variables for Railway
+ENV PORT=3000
+
 # Expose the port the app runs on
 EXPOSE 3000
 
