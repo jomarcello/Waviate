@@ -5,23 +5,17 @@ FROM node:18-slim
 WORKDIR /app
 
 # Copy files
-COPY package*.json ./
+COPY package.json package*.json ./
 COPY simple-server.js ./
 
 # Install dependencies
-RUN npm init -y && \
-    npm install express body-parser
+RUN npm install
 
-# Add debugging information
-RUN echo "===== DIRECTORY STRUCTURE ====="
+# Display directory contents for debugging
 RUN ls -la
-RUN echo "===== NODE VERSION ====="
-RUN node --version
-RUN echo "===== NPM VERSION ====="
-RUN npm --version
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Start the server
+# Use exact CMD format that matches Railway interface setting
 CMD ["node", "simple-server.js"] 
