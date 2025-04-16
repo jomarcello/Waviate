@@ -1,7 +1,6 @@
 [build]
-builder = "nixpacks"
-buildCommand = "cd backend && npm install"
-providers = ["node"]
+builder = "DOCKERFILE"
+dockerfilePath = "backend/Dockerfile"
 
 [deploy]
 startCommand = "cd backend && node server/server.js"
@@ -10,7 +9,4 @@ healthcheckTimeout = 100
 restartPolicyType = "on_failure"
 
 [service]
-rootDirectory = "backend"
-
-[nixpacks]
-nodejs = "18" 
+rootDirectory = "backend" 
