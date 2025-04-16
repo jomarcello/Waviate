@@ -5,13 +5,13 @@ FROM node:18-slim
 WORKDIR /app
 
 # Copy only the package files first for better caching
-COPY package*.json ./
+COPY backend/package*.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the application
-COPY . .
+COPY backend/ ./
 
 # Expose the port the app runs on
 EXPOSE 3000
