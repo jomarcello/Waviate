@@ -1,5 +1,12 @@
 const axios = require('axios');
-const { AIConfig } = require('../../cursor_ai_workspaces/ai_agent/config');
+
+// Default AI configuration
+const DEFAULT_AI_CONFIG = {
+  MODEL_NAME: 'deepseek-chat',
+  MAX_TOKENS: 2000,
+  MAX_HISTORY_LENGTH: 10,
+  SYSTEM_PROMPT: 'Je bent een behulpzame business assistent die klanten helpt via WhatsApp. Wees vriendelijk, professioneel en to-the-point. Geef duidelijke antwoorden en vraag door waar nodig.'
+};
 
 /**
  * DeepSeek AI Service
@@ -9,7 +16,10 @@ class DeepSeekService {
   constructor() {
     this.apiKey = process.env.DEEPSEEK_API_KEY;
     this.baseUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com';
-    this.model = process.env.DEEPSEEK_MODEL || AIConfig.MODEL_NAME;
+    this.model = process.env.DEEPSEEK_MODEL || DEFAULT_AI_CONFIG.MODEL_NAME;
+    this.maxTokens = DEFAULT_AI_CONFIG.MAX_TOKENS;
+    this.maxHistoryLength = DEFAULT_AI_CONFIG.MAX_HISTORY_LENGTH;
+    this.systemPrompt = DEFAULT_AI_CONFIG.SYSTEM_PROMPT;
     
     if (!this.apiKey) {
       console.error('DeepSeek API key missing. Please set DEEPSEEK_API_KEY env variable.');
@@ -34,7 +44,7 @@ class DeepSeekService {
           model: this.model,
           messages,
           temperature: 0.7,
-          max_tokens: AIConfig.MAX_TOKENS,
+          max_tokens: this.maxTokens,
         },
         {
           headers: {
@@ -104,12 +114,12 @@ class DeepSeekService {
     const messages = [
       {
         role: 'system',
-        content: AIConfig.SYSTEM_PROMPT
+        content: this.systemPrompt
       }
     ];
     
     // Add history (limited to prevent token overflows)
-    const limitedHistory = history.slice(-AIConfig.MAX_HISTORY_LENGTH);
+    const limitedHistory = history.slice(-this.maxHistoryLength);
     limitedHistory.forEach(item => {
       messages.push({
         role: item.role,
