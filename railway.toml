@@ -1,4 +1,4 @@
 [deploy]
-startCommand = "PORT=3000 node simple-server.js"
+startCommand = "node simple-server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 60 
