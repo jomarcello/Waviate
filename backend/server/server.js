@@ -3,6 +3,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 require('dotenv').config();
 
+// Import services
+const supabaseService = require('../services/supabaseService');
 const whatsappRoutes = require('../routes/whatsapp');
 
 const app = express();
@@ -74,27 +76,49 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-// Listen on all network interfaces
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Base URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
-  console.log(`WhatsApp webhook URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/whatsapp/webhook`);
-  
-  // Log all environment variables for debugging
-  console.log('\nEnvironment variables:');
-  Object.keys(process.env).forEach(key => {
-    if (!key.includes('TOKEN') && !key.includes('SECRET')) {
-      console.log(`${key}: ${process.env[key]}`);
-    }
-  });
-});
+// Initialize services before starting the server
+const initApp = async () => {
+  try {
+    // Initialize Supabase and check tables
+    await supabaseService.setupTables();
+    console.log('Database setup completed');
+    
+    // Start the server after initialization
+    startServer();
+  } catch (error) {
+    console.error('Error during initialization:', error);
+    // Start the server anyway to allow WhatsApp webhook verification
+    startServer();
+  }
+};
 
-// Handle server shutdown gracefully
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+// Function to start the server
+const startServer = () => {
+  // Listen on all network interfaces
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Base URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
+    console.log(`WhatsApp webhook URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}/api/whatsapp/webhook`);
+    
+    // Log all environment variables for debugging
+    console.log('\nEnvironment variables:');
+    Object.keys(process.env).forEach(key => {
+      if (!key.includes('TOKEN') && !key.includes('SECRET') && !key.includes('KEY')) {
+        console.log(`${key}: ${process.env[key]}`);
+      }
+    });
   });
-}); 
+
+  // Handle server shutdown gracefully
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received. Shutting down gracefully...');
+    server.close(() => {
+      console.log('Server closed');
+      process.exit(0);
+    });
+  });
+};
+
+// Start the application
+initApp(); 

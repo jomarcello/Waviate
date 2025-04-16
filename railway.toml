@@ -1,4 +1,4 @@
 [deploy]
-startCommand = "node simple-server.js"
-healthcheckPath = "/"
+startCommand = "cd backend && npm start"
+healthcheckPath = "/health"
 healthcheckTimeout = 60 

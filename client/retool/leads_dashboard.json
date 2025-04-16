@@ -1,0 +1,247 @@
+{
+  "name": "Leads Dashboard",
+  "description": "Overzicht van alle leads in het systeem",
+  "components": [
+    {
+      "id": "page_container",
+      "type": "container",
+      "showHeader": true,
+      "showFooter": false,
+      "children": [
+        {
+          "id": "header",
+          "type": "container",
+          "direction": "horizontal",
+          "children": [
+            {
+              "id": "title",
+              "type": "text",
+              "value": "Waviate WhatsApp Leads",
+              "style": { "fontSize": "24px", "fontWeight": "bold" }
+            },
+            {
+              "id": "refresh_button",
+              "type": "button",
+              "label": "Refresh",
+              "style": { "background": "#4CAF50" },
+              "onClick": "{{getLeadsQuery.trigger()}}"
+            }
+          ]
+        },
+        {
+          "id": "filters_container",
+          "type": "container",
+          "direction": "horizontal",
+          "children": [
+            {
+              "id": "status_filter",
+              "type": "select",
+              "label": "Status",
+              "options": [
+                { "label": "All", "value": "" },
+                { "label": "New", "value": "new" },
+                { "label": "Active", "value": "active" },
+                { "label": "Qualified", "value": "qualified" },
+                { "label": "Closed", "value": "closed" }
+              ],
+              "defaultValue": ""
+            },
+            {
+              "id": "date_filter",
+              "type": "daterangepicker",
+              "label": "Date Range"
+            },
+            {
+              "id": "search_input",
+              "type": "textinput",
+              "label": "Search",
+              "placeholder": "Search by phone or name"
+            }
+          ]
+        },
+        {
+          "id": "leads_table",
+          "type": "table",
+          "data": "{{getLeadsQuery.data}}",
+          "columns": [
+            {
+              "id": "id",
+              "title": "ID",
+              "visible": false
+            },
+            {
+              "id": "name",
+              "title": "Name",
+              "format": "{{currentRow.name || 'Unknown'}}"
+            },
+            {
+              "id": "phone_number",
+              "title": "Phone"
+            },
+            {
+              "id": "status",
+              "title": "Status",
+              "cellStyle": "{{self.value === 'new' ? { backgroundColor: '#E3F2FD' } : self.value === 'qualified' ? { backgroundColor: '#E8F5E9' } : null}}"
+            },
+            {
+              "id": "created_at",
+              "title": "Created",
+              "format": "{{moment(currentRow.created_at).format('DD/MM/YYYY HH:mm')}}"
+            },
+            {
+              "id": "message_count",
+              "title": "Messages",
+              "format": "{{currentRow.message_count || 0}}"
+            },
+            {
+              "id": "actions",
+              "title": "Actions",
+              "cellComponent": "button",
+              "componentProps": {
+                "label": "View",
+                "onClick": "{{navigateToLeadDetails(currentRow.id)}}"
+              }
+            }
+          ],
+          "onRowClick": "{{selectLead(currentRow)}}"
+        }
+      ]
+    },
+    {
+      "id": "lead_details_panel",
+      "type": "container",
+      "visible": "{{!!selectedLead}}",
+      "children": [
+        {
+          "id": "lead_header",
+          "type": "container",
+          "direction": "horizontal",
+          "children": [
+            {
+              "id": "lead_name",
+              "type": "text",
+              "value": "{{selectedLead.name || 'Unknown'}} ({{selectedLead.phone_number}})"
+            },
+            {
+              "id": "close_button",
+              "type": "button",
+              "label": "Close",
+              "onClick": "{{clearSelectedLead()}}"
+            }
+          ]
+        },
+        {
+          "id": "conversation_container",
+          "type": "container",
+          "children": [
+            {
+              "id": "messages_list",
+              "type": "list",
+              "data": "{{getLeadMessagesQuery.data}}",
+              "itemComponent": {
+                "type": "container",
+                "style": "{{item.direction === 'inbound' ? { backgroundColor: '#E8F5E9', alignSelf: 'flex-start' } : { backgroundColor: '#E3F2FD', alignSelf: 'flex-end' }}}",
+                "children": [
+                  {
+                    "id": "message_content",
+                    "type": "text",
+                    "value": "{{item.content}}"
+                  },
+                  {
+                    "id": "message_time",
+                    "type": "text",
+                    "value": "{{moment(item.created_at).format('HH:mm')}}",
+                    "style": { "fontSize": "12px", "color": "#757575" }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "send_message_container",
+              "type": "container",
+              "direction": "horizontal",
+              "children": [
+                {
+                  "id": "message_input",
+                  "type": "textarea",
+                  "placeholder": "Type a message...",
+                  "style": { "flexGrow": 1 }
+                },
+                {
+                  "id": "send_button",
+                  "type": "button",
+                  "label": "Send",
+                  "style": { "background": "#2196F3" },
+                  "onClick": "{{sendMessageQuery.trigger()}}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "id": "getLeadsQuery",
+      "type": "supabase",
+      "resourceName": "supabase",
+      "mode": "read",
+      "operation": "select",
+      "table": "leads",
+      "parameters": {
+        "select": "*",
+        "order": "created_at.desc",
+        "filter": "{{status_filter.value ? `status.eq.${status_filter.value}` : ''}}",
+        "search": "{{search_input.value ? `phone_number.like.%${search_input.value}%,name.like.%${search_input.value}%` : ''}}"
+      }
+    },
+    {
+      "id": "getLeadMessagesQuery",
+      "type": "restapi",
+      "resourceName": "waviate_api",
+      "endpoint": "/api/whatsapp/leads/{{selectedLead.id}}/history",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "id": "sendMessageQuery",
+      "type": "restapi",
+      "resourceName": "waviate_api",
+      "method": "POST",
+      "endpoint": "/api/whatsapp/send",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "phoneNumber": "{{selectedLead.phone_number}}",
+        "message": "{{message_input.value}}"
+      },
+      "onSuccess": [
+        "{{message_input.setValue('')}}",
+        "{{getLeadMessagesQuery.trigger()}}"
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "selectLead",
+      "parameters": ["lead"],
+      "body": "state.selectedLead = lead; getLeadMessagesQuery.trigger();"
+    },
+    {
+      "name": "clearSelectedLead",
+      "parameters": [],
+      "body": "state.selectedLead = null;"
+    },
+    {
+      "name": "navigateToLeadDetails",
+      "parameters": ["leadId"],
+      "body": "navigateTo(`/lead/${leadId}`);"
+    }
+  ],
+  "state": {
+    "selectedLead": null
+  }
+} 

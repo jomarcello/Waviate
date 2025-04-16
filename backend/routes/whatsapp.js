@@ -67,4 +67,7 @@ router.post('/webhook', (req, res) => {
 // Send message endpoint
 router.post('/send', whatsappController.sendMessage);
 
+// Get lead conversation history
+router.get('/leads/:leadId/history', whatsappController.getLeadHistory);
+
 module.exports = router; 

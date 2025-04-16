@@ -14,6 +14,7 @@
     "debug": "ls -la && find . -type f | sort && node -e \"console.log('Environment:', process.env)\" && node server/server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.38.4",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
