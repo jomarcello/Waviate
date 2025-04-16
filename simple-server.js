@@ -19,7 +19,9 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Zorg ervoor dat we op poort 3000 luisteren als Railway dat verwacht,
+// of anders gebruik de PORT omgevingsvariabele
+const PORT = 3000;
 const HOST = '0.0.0.0';
 
 console.log('Configured server port:', PORT);
