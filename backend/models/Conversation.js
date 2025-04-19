@@ -55,6 +55,24 @@ class Conversation {
   }
 
   /**
+   * Updates a conversation with provided data
+   * @param {object} supabase - Supabase client
+   * @param {string} id - Conversation ID
+   * @param {object} updateData - Data to update
+   * @returns {Promise<object>} The updated conversation
+   */
+  static async update(supabase, id, updateData) {
+    const { data, error } = await supabase
+      .from('conversations')
+      .update({ ...updateData, updated_at: new Date() })
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+    return data[0];
+  }
+
+  /**
    * List all conversations with pagination
    * @param {object} supabase - Supabase client
    * @param {number} page - Page number (1-based)

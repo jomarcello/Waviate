@@ -1,5 +1,7 @@
 const supabaseService = require('./supabaseService');
 const deepseekService = require('./deepseekService');
+const whatsappService = require('./whatsappService');
+const twilioService = require('./twilioService');
 const { Lead, Conversation, Message } = require('../models');
 
 /**
@@ -12,18 +14,26 @@ class ConversationService {
   }
 
   /**
-   * Processes an incoming message from WhatsApp
-   * @param {object} message - WhatsApp message object
+   * Processes an incoming message from WhatsApp or SMS
+   * @param {object} message - Message object (WhatsApp or Twilio format)
    * @param {string} phoneNumber - Sender's phone number
+   * @param {string} channel - Communication channel ('whatsapp' or 'sms')
    * @returns {Promise<object>} Response details
    */
-  async processIncomingMessage(message, phoneNumber) {
+  async processIncomingMessage(message, phoneNumber, channel = 'whatsapp') {
     try {
       // 1. Find or create lead in the database
       const lead = await this._findOrCreateLead(phoneNumber);
       
       // 2. Find or create conversation for this lead
       const conversation = await this._findOrCreateConversation(lead.id);
+      
+      // Update conversation metadata with the channel if not set
+      if (!conversation.metadata || !conversation.metadata.channel) {
+        await Conversation.update(this.supabase, conversation.id, {
+          metadata: { ...conversation.metadata, channel }
+        });
+      }
       
       // 3. Save the incoming message
       const messageContent = this._extractMessageContent(message);
@@ -32,7 +42,7 @@ class ConversationService {
         content: messageContent,
         direction: 'inbound',
         message_type: message.type || 'text',
-        metadata: message
+        metadata: { ...message, channel }
       });
       
       // 4. Detect message intent
@@ -60,16 +70,29 @@ class ConversationService {
         content: aiResponse,
         direction: 'outbound',
         message_type: 'text',
-        metadata: { intent, ai_generated: true }
+        metadata: { intent, ai_generated: true, channel }
       });
       
-      // 8. Return response for sending back to WhatsApp
+      // 8. Try to send the response via the appropriate channel
+      try {
+        if (channel === 'sms') {
+          await twilioService.sendMessage(phoneNumber, aiResponse);
+        } else {
+          await whatsappService.sendMessage(phoneNumber, aiResponse);
+        }
+      } catch (sendError) {
+        console.error(`Error sending message via ${channel}:`, sendError);
+        // We still consider the flow successful even if sending fails
+      }
+      
+      // 9. Return response
       return {
         phoneNumber,
         message: aiResponse,
         leadId: lead.id,
         conversationId: conversation.id,
-        intent
+        intent,
+        channel
       };
     } catch (error) {
       console.error('Error processing incoming message:', error);

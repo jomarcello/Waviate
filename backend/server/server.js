@@ -6,6 +6,7 @@ require('dotenv').config();
 // Import services
 const supabaseService = require('../services/supabaseService');
 const whatsappRoutes = require('../routes/whatsapp');
+const twilioRoutes = require('../routes/twilio');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/twilio', twilioRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
