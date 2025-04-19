@@ -15,7 +15,7 @@ class ConversationService {
 
   /**
    * Processes an incoming message from WhatsApp or SMS
-   * @param {object} message - Message object (WhatsApp or Twilio format)
+   * @param {object} message - Message object (WhatsApp/Twilio format)
    * @param {string} phoneNumber - Sender's phone number
    * @param {string} channel - Communication channel ('whatsapp' or 'sms')
    * @returns {Promise<object>} Response details
@@ -73,12 +73,12 @@ class ConversationService {
         metadata: { intent, ai_generated: true, channel }
       });
       
-      // 8. Try to send the response via the appropriate channel
+      // 8. Try to send the response via Twilio, either SMS or WhatsApp
       try {
-        if (channel === 'sms') {
-          await twilioService.sendMessage(phoneNumber, aiResponse);
+        if (channel === 'whatsapp') {
+          await twilioService.sendWhatsAppMessage(phoneNumber, aiResponse);
         } else {
-          await whatsappService.sendMessage(phoneNumber, aiResponse);
+          await twilioService.sendMessage(phoneNumber, aiResponse);
         }
       } catch (sendError) {
         console.error(`Error sending message via ${channel}:`, sendError);
